@@ -54,10 +54,11 @@ The pentest scope, authorization and retest terms are set in the Proposal, not t
 - Offers are built from the service-specific offer templates (cover: service name, client, issue date, version, classification, code; footer "COMMERCIAL PROPOSAL Ver. 1.0").
 - Everything the template asks to fill in must be gone: client name on the cover and in the intro, registration/VAT numbers (not "...."), "2 sentences about the Client", "(alter as needed)", "(if applicable)", the issue date, the code, empty "€" price fields, "....".
 - Totals: services minus discounts equal the TOTAL COST.
-- Payment terms in the offer match the contract template for that service (see table above). Validity: PSD2 and SWIFT offers stand for 60 days; ISO, SOC2 and ISO recertification offers for 30 days [confirm this is intended]. An offer past its validity is not sent as is.
+- Payment terms in the offer match the contract template for that service (see table above). Validity: PSD2 and SWIFT offers stand for 60 days; ISO, SOC2 and ISO recertification offers for 30 days; this is intended. An offer past its validity is not sent as is.
 - Bulgarian-client offers name 7Security Ltd as the entity that invoices and is paid.
 - Text from another service's offer is an error, for example ISMS wording in a SOC2 or SWIFT offer. The script flags this. The "About Us" and team-credentials sentences are the same in every offer and are ignored.
-- "QSA company" is PCI wording; it should not appear in PSD2, SOC2 or SWIFT offers.
+- "QSA company" is PCI wording; it should not appear in PSD2, SOC2, SWIFT or ISO offers. Use the neutral wording each offer template uses ("7Security GmbH", "a SWIFT Partner company", "assessor company" in PSD2).
+- "ISO/IEC 27001:2017 / ISO/IEC 27001:2022" in the ISO implementation offer is accepted.
 
 ## Not covered yet
 - Checking an offer's code against the contract number it later becomes (needs both documents).

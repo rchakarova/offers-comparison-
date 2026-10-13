@@ -256,7 +256,7 @@ def check_service_leftovers(flat):
         if m:
             add("FIX", "wrong-service-text", f"This is a {label} document but it mentions '{term}'. Copied from another service's template?",
                 body[max(0, m.start() - 50): m.end() + 40])
-    if "ISO" not in declared and re.search(r"QSA company", body):
+    if re.search(r"QSA company", body):
         add("FIX", "wrong-service-text", f"'QSA company' (PCI wording) appears in a {label} document.", "QSA company")
 
 

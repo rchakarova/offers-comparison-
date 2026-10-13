@@ -333,6 +333,15 @@ def check_offer_code(flat):
             add("BLOCK", "offer-code", f"The code {name}{ymd}{seq}{suffix} contains date {ymd}, but the offer was issued on {d.group(1)}.{d.group(2)}.{d.group(3)}.")
 
 
+def check_role_names(flat):
+    """Decision: the project role in offers is 'Project Manager (PM)'; CSM and SDM are old wording."""
+    for old in ("Customer Success Manager", "Service Delivery Manager", r"\(CSM\)", r"\(SDM\)"):
+        m = re.search(old, flat)
+        if m:
+            add("FIX", "role-names", f"'{m.group(0)}' appears; offers use 'Project Manager (PM)'.", flat[max(0, m.start() - 30): m.end() + 30])
+            break
+
+
 def check_typos(flat):
     for m in re.finditer(r"(?<![.\d])\.\.(?!\.)", flat):
         add("INFO", "typo", "Double full stop.", flat[max(0, m.start() - 30): m.end() + 10])
@@ -369,6 +378,7 @@ def main():
     if is_offer:
         check_missing_prices(text)
         check_offer_leftovers(flat)
+        check_role_names(flat)
         check_offer_code(flat)
         check_units(flat)
     check_parties(flat)

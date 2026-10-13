@@ -64,6 +64,10 @@ The pentest scope, authorization and retest terms are set in the Proposal, not t
 - "QSA company" is PCI wording; it should not appear in PSD2, SOC2, SWIFT or ISO offers. Use the neutral wording each offer template uses ("7Security GmbH", "a SWIFT Partner company", "assessor company" in PSD2).
 - "ISO/IEC 27001:2017 / ISO/IEC 27001:2022" in the ISO implementation offer is accepted.
 
+- The project role named in the Project Initiation text is **Project Manager (PM)**. "Customer Success Manager (CSM)" and "Service Delivery Manager (SDM)" are old wording; the script flags them.
+- Reports by standard: PCI DSS and 3DS use ROC and AOC; PIN uses ROC and AOC; **SSF** uses ROV and AOV for the Secure Software Standard and ROC for the Secure SLC Standard; P2PE uses P-ROV and AOV. The SSF assessor is the "Secure Software Assessor".
+- The 7Security registration number is `561824m` in every document, including the offer intro.
+
 ## Confirmed as intended (do not flag)
 
 - The 1-year option in the main PCI DSS offer has no separate payment sentence; the 50/50 terms stated for the 3-year option are enough.

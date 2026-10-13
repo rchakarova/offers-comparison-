@@ -348,6 +348,23 @@ def check_pci_numbering(flat):
         add("FIX", "pci-version", "Segmentation testing is cited as 11.3.4 / 11.3.4.1 (PCI DSS v3.2.1). In v4.0.1 it is 11.4.5 and 11.4.6.", m.group(0)[:110])
 
 
+def check_pentest_offer(flat):
+    """Pentest offers: total = testing days x daily rate (report days are not charged); remediation-testing note must stay."""
+    if not re.search(r"penetration testing services", flat, re.I):
+        return
+    if not re.search(r"Includes Remediation Testing for up to 4 \(four\) identified vulnerabilities", flat):
+        add("FIX", "pentest-terms", "The remediation-testing note is missing ('Includes Remediation Testing for up to 4 (four) identified vulnerabilities…').")
+    days = re.search(r"Penetration Testing on[^|€]{0,80}?\b(\d+)\s+days\b", flat)
+    rate = re.search(r"€\s*([\d,]+)\s*per day", flat)
+    if days and rate:
+        n, r = int(days.group(1)), int(rate.group(1).replace(",", ""))
+        tot = re.search(r"TOTAL COST:\s*€\s*([\d,]+)(?!\s*per day)\b(?!\s*per)", flat)
+        if re.search(r"TOTAL COST:\s*€\s*[\d,]+\s*per day", flat) and not tot:
+            add("BLOCK", "totals", f"The days are filled in ({n}) but TOTAL COST still shows the daily rate. It should be {n} x €{r:,} = €{n * r:,}.")
+        elif tot and int(tot.group(1).replace(",", "")) != n * r:
+            add("BLOCK", "totals", f"TOTAL COST is €{tot.group(1)}, but {n} testing days x €{r:,} = €{n * r:,} (report days are not charged).")
+
+
 def check_role_names(flat):
     """Decision: the project role in offers is 'Project Manager (PM)'; CSM and SDM are old wording."""
     for old in ("Customer Success Manager", "Service Delivery Manager", r"\(CSM\)", r"\(SDM\)"):
@@ -395,6 +412,7 @@ def main():
         check_missing_prices(text)
         check_offer_leftovers(flat)
         check_role_names(flat)
+        check_pentest_offer(flat)
         check_offer_code(flat)
         check_units(flat)
     check_parties(flat)

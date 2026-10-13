@@ -376,10 +376,21 @@ def check_role_names(flat):
             break
 
 
+def check_client_details(flat):
+    """Client VAT numbers carry the country prefix (LU..., BG..., CY..., DE...), as in the 7Security details (ATU...)."""
+    for m in re.finditer(r"VAT (?:number|No\.?)\s*:?\s*(\d[\d ]{5,})", flat):
+        add("FIX", "client-details", f"VAT number '{m.group(1).strip()}' has no country prefix (e.g. LU, BG, CY, DE).", m.group(0)[:50])
+    if re.search(r"S\.àr\.l", flat):
+        add("INFO", "client-details", "Luxembourg company form is written 'S.à r.l.' (with a space).", "S.àr.l.")
+
+
 def check_typos(flat):
     for m in re.finditer(r"(?<![.\d])\.\.(?!\.)", flat):
         add("INFO", "typo", "Double full stop.", flat[max(0, m.start() - 30): m.end() + 10])
         break
+    m = re.search(r"\((?:EU|EC)\)\s*\d{4}/\s+\d+", flat)
+    if m:
+        add("INFO", "typo", "Stray space inside a regulation number.", m.group(0))
     for m in re.finditer(r"\b([A-Za-z]{3,})\s+\1\b", flat):
         add("INFO", "typo", f"Repeated word '{m.group(1)}'.", flat[max(0, m.start() - 25): m.end() + 15])
         break
@@ -418,6 +429,7 @@ def main():
         check_offer_code(flat)
         check_units(flat)
     check_parties(flat)
+    check_client_details(flat)
     check_bulgarian(flat)
     check_totals(text)
     check_typos(flat)

@@ -33,15 +33,30 @@ def extract_text(path):
         return "\n".join(p.extract_text() or "" for p in PdfReader(path).pages)
     if low.endswith((".docx", ".dotx")):
         if shutil.which("pandoc"):
-            return subprocess.run(["pandoc", "-t", "plain", "--wrap=none", path], capture_output=True, text=True, check=True).stdout
-        import docx  # python-docx fallback
-        d = docx.Document(path)
-        parts = [p.text for p in d.paragraphs]
-        for t in d.tables:
-            for r in t.rows:
-                parts.append(" | ".join(c.text for c in r.cells))
-        return "\n".join(parts)
+            body = subprocess.run(["pandoc", "-t", "plain", "--wrap=none", path], capture_output=True, text=True, check=True).stdout
+        else:
+            import docx  # python-docx fallback
+            d = docx.Document(path)
+            parts = [p.text for p in d.paragraphs]
+            for t in d.tables:
+                for r in t.rows:
+                    parts.append(" | ".join(c.text for c in r.cells))
+            body = "\n".join(parts)
+        return body + "\n--- headers and footers ---\n" + docx_headers_footers(path)
     raise SystemExit("Unsupported file type: use .pdf or .docx")
+
+
+def docx_headers_footers(path):
+    import zipfile
+    out = []
+    with zipfile.ZipFile(path) as z:
+        for n in sorted(z.namelist()):
+            if re.fullmatch(r"word/(header|footer)\d*\.xml", n):
+                x = z.read(n).decode("utf8", "ignore")
+                x = re.sub(r"</w:p>", "\n", x)
+                x = re.sub(r"<[^>]+>", "", x)
+                out.append(x)
+    return "\n".join(out)
 
 
 def parse_date(s):
@@ -55,7 +70,10 @@ def check_placeholders(flat, text):
         add("BLOCK", "placeholder", "Unfilled blank (underscores) left in the document.", ctx)
         break
     for pat, label in [(r"\[[^\]\n]{1,60}\]", "text in [brackets]"), (r"\bXXX+\b", "XXX"), (r"\bTBD\b", "TBD"),
-                       (r"YYYYMMDD|DD\.MM\.YYYY", "date placeholder"), (r"(?i)lorem ipsum", "lorem ipsum")]:
+                       (r"YYYYMMDD|DD\.MM\.YYYY|DAY/MONTH/YEAR", "date placeholder"), (r"(?i)lorem ipsum", "lorem ipsum"),
+                       (r"CLIENT[’']S NAME|to Client[’']s name \(“Client”\)", "CLIENT'S NAME"), (r"(?i)\d+ sentences about the client", "'sentences about the Client' prompt"),
+                       (r"(?i)\(alter as needed\)", "'(alter as needed)'"), (r"…|\.{4,}", "ellipsis (…) left to fill in"),
+                       (r"(?i)\(if applicable\)", "'(if applicable)'")]:
         m = re.search(pat, flat)
         if m:
             add("BLOCK", "placeholder", f"Possible placeholder left in: {label}.", flat[max(0, m.start() - 40): m.end() + 20])
@@ -160,7 +178,7 @@ def check_bulgarian(flat):
 def check_totals(text):
     """Check each order-form block: items minus discounts must equal its TOTAL line.
     A final 'TOTAL CONTRACT COST' must equal the sum of the yearly totals."""
-    if not re.search(r"Order Form", text):
+    if not re.search(r"Order Form|COMMERCIAL PROPOSAL|TOTAL COST", text):
         return
     items, discounts, totals = 0, 0, []
     seen_item = False
@@ -186,6 +204,65 @@ def check_totals(text):
         else:
             items += val
             seen_item = True
+
+
+WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
+         "twelve": 12, "fourteen": 14, "fifteen": 15, "twenty": 20, "thirty": 30, "forty": 40, "sixty": 60, "ninety": 90,
+         "twenty-four": 24, "twenty four": 24, "thirty-six": 36}
+
+
+def check_number_words(flat):
+    for m in re.finditer(r"\b(\d+)\s*\(\s*([A-Za-z -]+?)\s*\)", flat):
+        w = m.group(2).lower().strip()
+        if w in WORDS and WORDS[w] != int(m.group(1)):
+            add("BLOCK", "number-words", f"'{m.group(0)}': the number and the word in brackets disagree.", m.group(0))
+
+
+def check_validity(flat):
+    v = re.search(r"offer stands for\s+(\d+)", flat, re.I)
+    d = re.search(r"ISSUED:?\s*(\d{1,2})[./](\d{1,2})[./](\d{4})", flat)
+    if v and d:
+        issued = date(int(d.group(3)), int(d.group(2)), int(d.group(1)))
+        left = (issued.toordinal() + int(v.group(1))) - date.today().toordinal()
+        if left < 0:
+            add("BLOCK", "offer-validity", f"The offer was issued {issued:%d.%m.%Y} and stands for {v.group(1)} days, so it expired {-left} days ago.")
+        elif left < 7:
+            add("INFO", "offer-validity", f"The offer expires in {left} days.")
+
+
+SERVICE_WORDS = {
+    "SWIFT": {"ISMS", "AICPA", "Trust Services", "PSD2"},
+    "PSD2": {"ISMS", "AICPA", "Trust Services", "SWIFT"},
+    "SOC2": {"ISMS", "International Organization for Standardization", "SWIFT", "PSD2"},
+    "ISO": {"AICPA", "Trust Services", "SWIFT", "PSD2"},
+}
+
+
+def check_service_leftovers(flat):
+    """Flag wording that belongs to another service's template (e.g. ISMS in a SWIFT offer).
+    A combined offer (e.g. ISO + SOC2) only gets terms that are foreign to every service in it."""
+    head = flat[:700]
+    declared = [n for pat, n in [(r"SWIFT", "SWIFT"), (r"PSD2", "PSD2"), (r"SOC ?2", "SOC2"), (r"ISO/IEC 27001|ISO 27001", "ISO")]
+                if re.search(pat, head, re.I)]
+    if not declared:
+        return
+    # the standard 'About Us' and team-credentials sentences list every service; ignore them
+    body = re.sub(r"We provide professional consulting services in compliance auditing, such as.*?(?<=[a-z0-9])\. ", " ", flat)
+    body = re.sub(r"[^.]{0,400}\bOSCP\b[^.]{0,80}\.", " ", body)
+    forbidden = set.intersection(*(SERVICE_WORDS[d] for d in declared))
+    label = " + ".join(declared)
+    for term in sorted(forbidden):
+        m = re.search(r"\b" + re.escape(term) + r"\b", body)
+        if m:
+            add("FIX", "wrong-service-text", f"This is a {label} document but it mentions '{term}'. Copied from another service's template?",
+                body[max(0, m.start() - 50): m.end() + 40])
+    if "ISO" not in declared and re.search(r"QSA company", body):
+        add("FIX", "wrong-service-text", f"'QSA company' (PCI wording) appears in a {label} document.", "QSA company")
+
+
+def check_missing_prices(text):
+    if re.search(r"€\s*(?:\||$)", text, re.M):
+        add("BLOCK", "prices", "A price field is empty (a '€' with no amount).")
 
 
 def check_typos(flat):
@@ -214,8 +291,16 @@ def main():
         kinds.append("annex")
     if re.search(r"(?i)\bproposal\b.*\bvalid\b|\boffer\b", flat[:600]) and not kinds:
         kinds.append("offer?")
+    is_offer = bool(re.search(r"COMMERCIAL PROPOSAL|\(“proposal”, “offer”", flat))
+    if is_offer:
+        kinds.append("offer")
     check_placeholders(flat, text)
     check_numbers(flat, has_contract_body)
+    check_number_words(flat)
+    check_validity(flat)
+    check_service_leftovers(flat)
+    if is_offer:
+        check_missing_prices(text)
     check_parties(flat)
     check_bulgarian(flat)
     check_totals(text)

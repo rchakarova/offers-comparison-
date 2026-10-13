@@ -39,5 +39,5 @@ You are checking a document an account manager (AM) is about to send. The goal i
 ## Notes
 
 - The script's output is a starting point. If you disagree with a finding (a false alarm), say so and explain briefly, rather than repeating it.
-- If the document is a type the rules don't cover yet (for example an offer or proposal), run the script anyway, say clearly what was and wasn't checked, and don't invent rules.
+- Offers are covered (see the Offers section of the rules). If the document is a type the rules don't cover yet, run the script anyway, say clearly what was and wasn't checked, and don't invent rules.
 - Never edit the document; only report. Offer to draft corrected wording if asked.

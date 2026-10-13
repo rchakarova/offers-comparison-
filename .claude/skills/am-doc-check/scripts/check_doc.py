@@ -73,7 +73,7 @@ def check_placeholders(flat, text):
                        (r"YYYYMMDD|DD\.MM\.YYYY|DAY/MONTH/YEAR", "date placeholder"), (r"(?i)lorem ipsum", "lorem ipsum"),
                        (r"CLIENT[’']S NAME|to Client[’']s name \(“Client”\)", "CLIENT'S NAME"), (r"(?i)\d+ sentences about the client", "'sentences about the Client' prompt"),
                        (r"(?i)\(alter as needed\)", "'(alter as needed)'"), (r"…|\.{4,}", "ellipsis (…) left to fill in"),
-                       (r"(?i)\(if applicable\)", "'(if applicable)'")]:
+                       (r"(?i)\(if applicable\)", "'(if applicable)'"), (r"TRADE NAME", "TRADE NAME")]:
         m = re.search(pat, flat)
         if m:
             add("BLOCK", "placeholder", f"Possible placeholder left in: {label}.", flat[max(0, m.start() - 40): m.end() + 20])
@@ -278,7 +278,7 @@ def check_offer_leftovers(flat):
     tags = {t for t in ("L1", "ML2", "SPL2") if re.search(r"\b" + t + r"\b[^€]{0,12}:\s*€", flat)}
     if len(tags) > 1:
         add("FIX", "price-options", f"Several reporting price options are left in ({', '.join(sorted(tags))}). Keep only the one that applies.")
-    years = [int(y) for y in re.findall(r"\b(?:1st|2nd|3rd) Year\s+(20\d\d)", flat)]
+    years = [int(y) for y in re.findall(r"\b(?:(?:1st|2nd|3rd)\s+)?Year\s+(20\d\d)", flat)]
     if years:
         d = re.search(r"ISSUED:?\s*(\d{1,2})[./](\d{1,2})[./](\d{4})", flat)
         ref = int(d.group(3)) if d else date.today().year

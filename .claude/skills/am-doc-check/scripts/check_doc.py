@@ -207,6 +207,8 @@ def check_totals(text):
             seen_item = False
         elif re.search(r"Discount", line, re.I):
             discounts += val
+        elif re.search(r"/\s*month|per month|per day|per domain|every additional|per IP", line, re.I):
+            continue  # unit rates and option prices in the text are not line items of a total
         else:
             items += val
             seen_item = True

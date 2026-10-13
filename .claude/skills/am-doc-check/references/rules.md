@@ -1,6 +1,6 @@
 # Rules for outbound document checks
 
-Maintained by: [owner - to be named]. Update this file and `scripts/check_doc.py` together when a template changes. Last reviewed: [date].
+Maintained by: Rozmari Asprilla. Update this file and `scripts/check_doc.py` together when a template changes. Last reviewed: 2026-10-13.
 
 ## Numbers
 

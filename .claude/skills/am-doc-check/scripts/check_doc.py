@@ -65,7 +65,7 @@ def parse_date(s):
 
 
 def check_placeholders(flat, text):
-    for m in re.finditer(r"_{3,}", text):
+    for m in re.finditer(r"_{2,}", text):
         ctx = re.sub(r"\s+", " ", text[max(0, m.start() - 40): m.end() + 20])
         add("BLOCK", "placeholder", "Unfilled blank (underscores) left in the document.", ctx)
         break
@@ -73,7 +73,10 @@ def check_placeholders(flat, text):
                        (r"YYYYMMDD|DD\.MM\.YYYY|DAY/MONTH/YEAR", "date placeholder"), (r"(?i)lorem ipsum", "lorem ipsum"),
                        (r"CLIENT[’']S NAME|to Client[’']s name \(“Client”\)", "CLIENT'S NAME"), (r"(?i)\d+ sentences about the client", "'sentences about the Client' prompt"),
                        (r"(?i)\(alter as needed\)", "'(alter as needed)'"), (r"…|\.{4,}", "ellipsis (…) left to fill in"),
-                       (r"(?i)Discount\s*\(if applicable\)", "'Discount (if applicable)'"), (r"TRADE NAME", "TRADE NAME")]:
+                       (r"(?i)Discount\s*\(if applicable\)", "'Discount (if applicable)'"), (r"TRADE NAME", "TRADE NAME"),
+                       (r"\b[xX]{3,}\b(?! ?\))|\bxxx \(", "xxx placeholder"), (r"\bX days\b", "'X days' placeholder"),
+                       (r"\bNUMBER\b", "NUMBER placeholder"), (r"\(IF APPLICABLE\)", "'(IF APPLICABLE)'"),
+                       (r"for number domains", "'number domains' placeholder")]:
         m = re.search(pat, flat)
         if m:
             add("BLOCK", "placeholder", f"Possible placeholder left in: {label}.", flat[max(0, m.start() - 40): m.end() + 20])
@@ -333,6 +336,18 @@ def check_offer_code(flat):
             add("BLOCK", "offer-code", f"The code {name}{ymd}{seq}{suffix} contains date {ymd}, but the offer was issued on {d.group(1)}.{d.group(2)}.{d.group(3)}.")
 
 
+def check_pci_numbering(flat):
+    """PCI DSS v4.0.1 numbering: scans are 11.3.1 (internal) and 11.3.2 (external ASV); segmentation testing is 11.4.5 / 11.4.6.
+    v3.2.1 used 11.2.x and 11.3.4. A reference with the old number in a scanning/segmentation sentence is probably outdated."""
+    m = re.search(r"Requirement\s+11\.2(?:\.\d)?\b[^.]{0,250}scan|scan[^.]{0,250}Requirement\s+11\.2(?:\.\d)?\b", flat, re.I)
+    if m:
+        add("FIX", "pci-version", "A vulnerability-scanning sentence cites 'Requirement 11.2' / '11.2.2'. That is PCI DSS v3.2.1 numbering; "
+            "in v4.0.1 scans are 11.3.1 (internal) and 11.3.2 (external ASV).", m.group(0)[:110])
+    m = re.search(r"11\.3\.4(?:\.1)?\b[^.]{0,200}segmentation|segmentation[^.]{0,200}11\.3\.4(?:\.1)?\b", flat, re.I)
+    if m:
+        add("FIX", "pci-version", "Segmentation testing is cited as 11.3.4 / 11.3.4.1 (PCI DSS v3.2.1). In v4.0.1 it is 11.4.5 and 11.4.6.", m.group(0)[:110])
+
+
 def check_role_names(flat):
     """Decision: the project role in offers is 'Project Manager (PM)'; CSM and SDM are old wording."""
     for old in ("Customer Success Manager", "Service Delivery Manager", r"\(CSM\)", r"\(SDM\)"):
@@ -373,6 +388,7 @@ def main():
     check_numbers(flat, has_contract_body)
     check_number_words(flat)
     check_prepayment_wording(flat)
+    check_pci_numbering(flat)
     check_validity(flat)
     check_service_leftovers(flat)
     if is_offer:

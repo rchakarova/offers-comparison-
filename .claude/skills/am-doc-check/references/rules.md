@@ -68,6 +68,9 @@ The pentest scope, authorization and retest terms are set in the Proposal, not t
 - Reports by standard: PCI DSS and 3DS use ROC and AOC; PIN uses ROC and AOC; **SSF** uses ROV and AOV for the Secure Software Standard and ROC for the Secure SLC Standard; P2PE uses P-ROV and AOV. The SSF assessor is the "Secure Software Assessor".
 - The 7Security registration number is `561824m` in every document, including the offer intro.
 
+- Pentest offers (also for apps) stand for 30 days; the ASV offer stands for 60 days. Pentest offers: 100% payment before the test, the final report only after full payment, invoices due on receipt. ASV offers: 100% before the start, invoices due within 10 days from the issuance date.
+- Offers cite PCI DSS v4.0.1 requirement numbers: external ASV scans 11.3.2, internal scans 11.3.1, segmentation testing 11.4.5/11.4.6 (v3.2.1 used 11.2.x and 11.3.4). The script flags the old numbers.
+
 ## Confirmed as intended (do not flag)
 
 - The 1-year option in the main PCI DSS offer has no separate payment sentence; the 50/50 terms stated for the 3-year option are enough.

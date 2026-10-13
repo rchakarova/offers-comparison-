@@ -54,7 +54,9 @@ The pentest scope, authorization and retest terms are set in the Proposal, not t
 - Offers are built from the service-specific offer templates (cover: service name, client, issue date, version, classification, code; footer "COMMERCIAL PROPOSAL Ver. 1.0").
 - Everything the template asks to fill in must be gone: client name on the cover and in the intro, registration/VAT numbers (not "...."), "2 sentences about the Client", "(alter as needed)", "(if applicable)", the issue date, the code, empty "€" price fields, "....".
 - Totals: services minus discounts equal the TOTAL COST.
-- Payment terms in the offer match the contract template for that service (see table above). Validity: PSD2 and SWIFT offers stand for 60 days; ISO, SOC2 and ISO recertification offers for 30 days; this is intended. An offer past its validity is not sent as is.
+- Payment terms in the offer match the contract template for that service (see table above). Validity: PCI (DSS, 3DS, PIN), PSD2 and SWIFT offers stand for 60 days; ISO, SOC2 and ISO recertification offers for 30 days; this is intended. An offer past its validity is not sent as is.
+- PCI offers: 50% prepayment before the project starts, the remaining 50% invoiced on delivery of the draft deliverables; prepayment invoice due within 10 calendar days, final invoice due on receipt.
+- PCI offers list reporting price options (L1, ML2, SPL2 V4.0) and a discount shown as an either/or amount: the AM keeps only the option that applies and picks one discount amount. The year labels in the 3-year table (1st Year 2026 ...) must match the offer year. Template instructions ((NOTE: ...), (OPTIONAL)) must be gone.
 - Bulgarian-client offers name 7Security Ltd as the entity that invoices and is paid.
 - Text from another service's offer is an error, for example ISMS wording in a SOC2 or SWIFT offer. The script flags this. The "About Us" and team-credentials sentences are the same in every offer and are ignored.
 - "QSA company" is PCI wording; it should not appear in PSD2, SOC2, SWIFT or ISO offers. Use the neutral wording each offer template uses ("7Security GmbH", "a SWIFT Partner company", "assessor company" in PSD2).

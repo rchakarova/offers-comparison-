@@ -265,6 +265,29 @@ def check_missing_prices(text):
         add("BLOCK", "prices", "A price field is empty (a '€' with no amount).")
 
 
+def check_offer_leftovers(flat):
+    m = re.search(r"€\s*\d+/\d[\d,]*", flat)
+    if m:
+        add("BLOCK", "prices", f"Unresolved either/or amount '{m.group(0)}'. Pick one.", m.group(0))
+    m = re.search(r"\(\s*NOTE:[^)]{0,160}\)?", flat)
+    if m:
+        add("BLOCK", "template-instruction", "An internal instruction from the template is still in the text.", m.group(0)[:120])
+    m = re.search(r"\(OPTIONAL\)", flat)
+    if m:
+        add("FIX", "template-instruction", "'(OPTIONAL)' is still in a heading: keep or remove the section, and take the word out.")
+    tags = {t for t in ("L1", "ML2", "SPL2") if re.search(r"\b" + t + r"\b[^€]{0,12}:\s*€", flat)}
+    if len(tags) > 1:
+        add("FIX", "price-options", f"Several reporting price options are left in ({', '.join(sorted(tags))}). Keep only the one that applies.")
+    years = [int(y) for y in re.findall(r"\b(?:1st|2nd|3rd) Year\s+(20\d\d)", flat)]
+    if years:
+        d = re.search(r"ISSUED:?\s*(\d{1,2})[./](\d{1,2})[./](\d{4})", flat)
+        ref = int(d.group(3)) if d else date.today().year
+        if years[0] < ref:
+            add("FIX", "year-labels", f"The first contract year is labelled {years[0]}, but the offer is from {ref}. Update the year labels.")
+        if any(b - a != 1 for a, b in zip(years, years[1:])):
+            add("FIX", "year-labels", f"The year labels are not consecutive: {years}.")
+
+
 def check_typos(flat):
     for m in re.finditer(r"(?<![.\d])\.\.(?!\.)", flat):
         add("INFO", "typo", "Double full stop.", flat[max(0, m.start() - 30): m.end() + 10])
@@ -301,6 +324,7 @@ def main():
     check_service_leftovers(flat)
     if is_offer:
         check_missing_prices(text)
+        check_offer_leftovers(flat)
     check_parties(flat)
     check_bulgarian(flat)
     check_totals(text)

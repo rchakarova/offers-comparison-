@@ -354,7 +354,9 @@ def check_pentest_offer(flat):
         return
     if not re.search(r"Includes Remediation Testing for up to 4 \(four\) identified vulnerabilities", flat):
         add("FIX", "pentest-terms", "The remediation-testing note is missing ('Includes Remediation Testing for up to 4 (four) identified vulnerabilities…').")
-    days = re.search(r"Penetration Testing on[^|€]{0,80}?\b(\d+)\s+days\b", flat)
+    days = re.search(r"Penetration Testing on[^|€]{0,80}?\b(\d+|X)\s+days\b", flat)
+    if days and days.group(1) == "X":  # template still unfilled
+        days = None
     rate = re.search(r"€\s*([\d,]+)\s*per day", flat)
     if days and rate:
         n, r = int(days.group(1)), int(rate.group(1).replace(",", ""))

@@ -73,7 +73,7 @@ def check_placeholders(flat, text):
                        (r"YYYYMMDD|DD\.MM\.YYYY|DAY/MONTH/YEAR", "date placeholder"), (r"(?i)lorem ipsum", "lorem ipsum"),
                        (r"CLIENT[’']S NAME|to Client[’']s name \(“Client”\)", "CLIENT'S NAME"), (r"(?i)\d+ sentences about the client", "'sentences about the Client' prompt"),
                        (r"(?i)\(alter as needed\)", "'(alter as needed)'"), (r"…|\.{4,}", "ellipsis (…) left to fill in"),
-                       (r"(?i)\(if applicable\)", "'(if applicable)'"), (r"TRADE NAME", "TRADE NAME")]:
+                       (r"(?i)Discount\s*\(if applicable\)", "'Discount (if applicable)'"), (r"TRADE NAME", "TRADE NAME")]:
         m = re.search(pat, flat)
         if m:
             add("BLOCK", "placeholder", f"Possible placeholder left in: {label}.", flat[max(0, m.start() - 40): m.end() + 20])
@@ -296,6 +296,33 @@ def check_prepayment_wording(flat):
             "ISSUANCE date, as in the offers.", m.group(0)[:100])
 
 
+def check_units(flat):
+    m = re.search(r"~?\b1\s+(Days|Months|Weeks|Years)\b", flat)
+    if m:
+        add("INFO", "typo", f"Number and unit disagree: '{m.group(0)}'.", m.group(0))
+    m = re.search(r"~?\b([2-9]|\d{2,})\s+(Day|Month|Week)\b(?!s)", flat)
+    if m:
+        add("INFO", "typo", f"Number and unit disagree: '{m.group(0)}'.", m.group(0))
+
+
+def check_offer_code(flat):
+    """Offer cover: CODE = CLIENT + YYMMDD (issue date) + NN + service suffix, e.g. TENEN26101310SWIFT."""
+    cover = flat[:900]
+    if "--- headers and footers ---" in flat:  # Word files keep the cover fields in the footer
+        cover += " " + flat.split("--- headers and footers ---")[-1]
+    d = re.search(r"ISSUED:?\s*(?:VERSION:?\s*)?(\d{1,2})[./](\d{1,2})[./](\d{4})", cover)
+    toks = re.findall(r"\b([A-Z][A-Z0-9]*?)(\d{6})(\d{2})([A-Z]{0,8})\b", cover)
+    if not toks:
+        if re.search(r"\bCODE:", cover):
+            add("BLOCK", "offer-code", "The offer cover has no code (expected CLIENT + issue date YYMMDD + number + service, e.g. TENEN26101310SWIFT).")
+        return
+    name, ymd, seq, suffix = toks[0]
+    if d:
+        issued = f"{d.group(3)[2:]}{int(d.group(2)):02d}{int(d.group(1)):02d}"
+        if issued != ymd:
+            add("BLOCK", "offer-code", f"The code {name}{ymd}{seq}{suffix} contains date {ymd}, but the offer was issued on {d.group(1)}.{d.group(2)}.{d.group(3)}.")
+
+
 def check_typos(flat):
     for m in re.finditer(r"(?<![.\d])\.\.(?!\.)", flat):
         add("INFO", "typo", "Double full stop.", flat[max(0, m.start() - 30): m.end() + 10])
@@ -334,6 +361,8 @@ def main():
     if is_offer:
         check_missing_prices(text)
         check_offer_leftovers(flat)
+        check_offer_code(flat)
+        check_units(flat)
     check_parties(flat)
     check_bulgarian(flat)
     check_totals(text)

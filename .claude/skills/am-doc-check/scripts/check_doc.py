@@ -311,7 +311,14 @@ def check_offer_code(flat):
     if "--- headers and footers ---" in flat:  # Word files keep the cover fields in the footer
         cover += " " + flat.split("--- headers and footers ---")[-1]
     d = re.search(r"ISSUED:?\s*(?:VERSION:?\s*)?(\d{1,2})[./](\d{1,2})[./](\d{4})", cover)
-    toks = re.findall(r"\b([A-Z][A-Z0-9]*?)(\d{6})(\d{2})([A-Z]{0,8})\b", cover)
+    def real_date(ymd):
+        try:
+            date(2000 + int(ymd[:2]), int(ymd[2:4]), int(ymd[4:6]))
+            return True
+        except ValueError:
+            return False
+    toks = [t for t in re.findall(r"\b([A-Z][A-Z0-9]*?)(\d{6})(\d{2})([A-Z]{0,8})\b", cover)
+            if real_date(t[1]) and t[0] not in ("ATU", "BG", "CY", "LU", "DE")]
     if not toks:
         if re.search(r"\bCODE:", cover):
             add("BLOCK", "offer-code", "The offer cover has no code (expected CLIENT + issue date YYMMDD + number + service, e.g. TENEN26101310SWIFT).")

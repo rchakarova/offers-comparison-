@@ -64,6 +64,14 @@ The pentest scope, authorization and retest terms are set in the Proposal, not t
 - "QSA company" is PCI wording; it should not appear in PSD2, SOC2, SWIFT or ISO offers. Use the neutral wording each offer template uses ("7Security GmbH", "a SWIFT Partner company", "assessor company" in PSD2).
 - "ISO/IEC 27001:2017 / ISO/IEC 27001:2022" in the ISO implementation offer is accepted.
 
+## Confirmed as intended (do not flag)
+
+- The 1-year option in the main PCI DSS offer has no separate payment sentence; the 50/50 terms stated for the 3-year option are enough.
+- "Loyal Partner Discount" and "Valuable Partner Discount" are both acceptable names.
+- The either/or discount amount ("1/2,900") is deliberate; the AM must resolve it before sending (the script flags it until then).
+- The "Formal bi-annual scope validation (req. 12.5.2.1)" line in the monthly option is fine as written.
+- The layout of the 3-year price table (labels, rows per year) is correct as it is. Tables lose merged cells when converted to text, so never report table layout or "missing" rows from converted text alone.
+
 ## Not covered yet
 - Checking an offer's code against the contract number it later becomes (needs both documents).
 - Checking pricing against the price list, discounts, or clauses that differ from the template. Send those to the SDD.

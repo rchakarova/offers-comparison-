@@ -145,6 +145,9 @@ def check_parties(flat):
     for m in re.finditer(r"(?:registration\s+(?:number|No\.?)\s*)((?:FN\s*)?5618\d\d\s?m)", flat):
         if m.group(1) != SEVEN_REG:
             add("BLOCK", "7sec-details", f"7Security registration number written '{m.group(1)}'; standard is '{SEVEN_REG}'.")
+    for m in re.finditer(r"7Security GmbH[^,]{0,50},\s*with registration (?:number|No\.?)\s*([^,]+?),", flat):
+        if m.group(1).strip() != SEVEN_REG:
+            add("BLOCK", "7sec-details", f"7Security registration number is written '{m.group(1).strip()}'; it should be '{SEVEN_REG}'.", m.group(0)[:90])
     if "ATU" in flat and SEVEN_VAT not in flat:
         add("BLOCK", "7sec-details", f"7Security VAT number differs from {SEVEN_VAT}.")
     if re.search(r"integral part|is entered between", flat):
@@ -354,8 +357,6 @@ def main():
         kinds.append("appendix/order form")
     if re.search(r"\bAnnex\s+[IVX\d]+", flat):
         kinds.append("annex")
-    if re.search(r"(?i)\bproposal\b.*\bvalid\b|\boffer\b", flat[:600]) and not kinds:
-        kinds.append("offer?")
     is_offer = bool(re.search(r"COMMERCIAL PROPOSAL|\(“proposal”, “offer”", flat))
     if is_offer:
         kinds.append("offer")

@@ -288,6 +288,14 @@ def check_offer_leftovers(flat):
             add("FIX", "year-labels", f"The year labels are not consecutive: {years}.")
 
 
+def check_prepayment_wording(flat):
+    """Decision: prepayment/advance invoices are due from the ISSUANCE date, in offers and contracts alike."""
+    m = re.search(r"advance invoice within 10 \(ten\) calendar days from its receipt|prepayment invoice[^.]{0,60}from (?:its|the) receipt", flat, re.I)
+    if m:
+        add("FIX", "payment-terms", "The advance/prepayment invoice is due 'from its receipt'. The rule is 10 calendar days from the "
+            "ISSUANCE date, as in the offers.", m.group(0)[:100])
+
+
 def check_typos(flat):
     for m in re.finditer(r"(?<![.\d])\.\.(?!\.)", flat):
         add("INFO", "typo", "Double full stop.", flat[max(0, m.start() - 30): m.end() + 10])
@@ -320,6 +328,7 @@ def main():
     check_placeholders(flat, text)
     check_numbers(flat, has_contract_body)
     check_number_words(flat)
+    check_prepayment_wording(flat)
     check_validity(flat)
     check_service_leftovers(flat)
     if is_offer:

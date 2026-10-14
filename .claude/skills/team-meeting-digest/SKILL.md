@@ -20,7 +20,7 @@ You are producing a short, factual digest for a manager about her own team's rec
 ## Steps
 
 1. **Period and teams.** Default: the last 7 days. If the user says "every other day", use the last 2 days. Get the label ids with `meetings_labels` and match the names loosely ("Delivery - Auditors", "Delivery - AMs", "Delivery - Pentesters"; the user may write them without spaces).
-2. **Collect meetings.** For each label call `meetings_search` with `label` and `from` (page with `nextCursor`, `limit` 60). A meeting can carry two labels: deduplicate by `id`. Note, per person, how many meetings they attended (needed for fair context).
+2. **Collect meetings.** For each label call `meetings_search` with `label` and `from` (page with `nextCursor`, `limit` 60). A meeting can carry two labels: deduplicate by `id`. **Ignore meetings whose title contains "[INFO]"**: they are the manager's informational notes during real calls, not meetings. Note, per person, how many meetings they attended (needed for fair context).
 3. **Bot removed.** From the search results take `status` = `removed`. Call `meeting_get` on each to confirm the `lastError`.
    - Report: title and local time, minutes recorded, internal attendees, organizer, whether external guests were present.
    - **Who:** Atlas cannot tell. If the summary or transcript says who proposed removing the bot, quote it. Otherwise list the participants and say "not attributable". If a client was the only other person present, the client could have removed it.

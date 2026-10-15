@@ -75,6 +75,10 @@ The pentest scope, authorization and retest terms are set in the Proposal, not t
 
 ## Confirmed as intended (do not flag)
 
+- Order forms for additional AOCs may cover group companies that are not named in the preamble (confirmed by the SDD).
+- "Note: Payment Terms: 100% prepayment applies to each order." is the standard note on additional-AOC order forms.
+- **Additional AOC issuance price:** EUR 1,800 per AOC is the current price; EUR 1,000 is the legacy price (e.g. InDrive). A client has one of the two for all its AOCs. The script flags any other amount, or two different prices in one appendix; the SDD decides which price applies to which client.
+
 - The 1-year option in the main PCI DSS offer has no separate payment sentence; the 50/50 terms stated for the 3-year option are enough.
 - "Loyal Partner Discount" and "Valuable Partner Discount" are both acceptable names.
 - The either/or discount amount ("1/2,900") is deliberate; the AM must resolve it before sending (the script flags it until then).

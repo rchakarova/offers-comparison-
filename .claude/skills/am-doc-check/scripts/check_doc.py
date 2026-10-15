@@ -142,6 +142,19 @@ def check_numbers(flat, has_contract_body):
     return clean_contracts, order_nos
 
 
+def check_aoc_prices(flat):
+    """Additional AOC issuance: EUR 1,800 (current) or EUR 1,000 (legacy clients). One price per appendix."""
+    prices = [int(m.group(1).replace(",", "")) for m in re.finditer(
+        r"Additional PCI DSS AOC Issuance for[^\u20ac]{0,160}\u20ac\s*([\d,]+)", flat)]
+    if not prices:
+        return
+    odd = sorted(set(p for p in prices if p not in (1000, 1800)))
+    if odd:
+        add("FIX", "aoc-price", f"Additional AOC price(s) {odd} are neither the current EUR 1,800 nor the legacy EUR 1,000.")
+    if len(set(prices)) > 1:
+        add("FIX", "aoc-price", f"Additional AOC prices differ within one appendix ({sorted(set(prices))}); a client has either the legacy EUR 1,000 or the current EUR 1,800 price for all.")
+
+
 def check_parties(flat):
     if "7Security GmbH" not in flat:
         return
@@ -431,6 +444,7 @@ def main():
         check_offer_code(flat)
         check_units(flat)
     check_parties(flat)
+    check_aoc_prices(flat)
     check_client_details(flat)
     check_bulgarian(flat)
     check_totals(text)

@@ -12,7 +12,7 @@ Maintained by: Rozmari Asprilla. Update this file and `scripts/check_doc.py` tog
 
 ## 7Security details (identical everywhere)
 
-- Registration number `561824m` (no "FN", no space), VAT `ATU77298229`, address `Hiessgasse 12/3, 1030 Vienna, Austria`.
+- Registration number `561824m` (no "FN"; a stray space, as in "561824 m", is accepted), VAT `ATU77298229`, address `Hiessgasse 12/3, 1030 Vienna, Austria`.
 - The appendix and annex preambles include all three, as in the templates.
 - Signatory for 7Security: Tanya Klyasova, COO.
 

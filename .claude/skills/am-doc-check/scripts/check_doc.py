@@ -146,10 +146,10 @@ def check_parties(flat):
     if "7Security GmbH" not in flat:
         return
     for m in re.finditer(r"(?:registration\s+(?:number|No\.?)\s*)((?:FN\s*)?5618\d\d\s?m)", flat):
-        if m.group(1) != SEVEN_REG:
+        if re.sub(r"\s+", "", m.group(1)) != SEVEN_REG:  # spacing ("561824 m") is accepted
             add("BLOCK", "7sec-details", f"7Security registration number written '{m.group(1)}'; standard is '{SEVEN_REG}'.")
     for m in re.finditer(r"7Security GmbH[^,]{0,50},\s*with registration (?:number|No\.?)\s*([^,]+?),", flat):
-        if m.group(1).strip() != SEVEN_REG:
+        if re.sub(r"\s+", "", m.group(1)) != SEVEN_REG:
             add("BLOCK", "7sec-details", f"7Security registration number is written '{m.group(1).strip()}'; it should be '{SEVEN_REG}'.", m.group(0)[:90])
     if "ATU" in flat and SEVEN_VAT not in flat:
         add("BLOCK", "7sec-details", f"7Security VAT number differs from {SEVEN_VAT}.")
